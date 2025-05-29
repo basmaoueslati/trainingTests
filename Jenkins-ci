@@ -18,7 +18,7 @@ pipeline {
                 nexusArtifactUploader artifacts: [
                     [
                         artifactId: 'numeric', classifier: '', 
-                        file: 'target/numeric-0.0.1.jar', 
+                        file: 'target/numeric-${revision}.jar', 
                         type: 'jar'
                     ]
                 ], 
@@ -28,7 +28,7 @@ pipeline {
                 nexusVersion: 'nexus3', 
                 protocol: 'http', 
                 repository: 'compare', 
-                version: '0.0.1'
+                version: '${revision}'
             }
         }
 
