@@ -10,6 +10,7 @@ pipeline {
                 sh "mvn versions:set -DnewVersion=${PROJECT_VERSION}"
             }
         }
+    }
     stages {
         //Continuous Integration
         stage('Build') {
