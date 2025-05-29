@@ -4,7 +4,7 @@ pipeline {
         //Continuous Integration
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests=true'
+                sh 'mvn clean -Drevision=1.0.0 package -DskipTests=true'
             }
         }
         stage('Test') {
