@@ -11,7 +11,7 @@
 
 	<groupId>com.devops</groupId>
 	<artifactId>numeric</artifactId>
-	<version>${VERSION}</version>
+	<version>1.0.0</version>
 	<name>numeric</name>
 	<description>Demo for DevOps</description>
 
