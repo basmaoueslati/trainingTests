@@ -1,23 +1,33 @@
 pipeline {
     agent any
     environment {
-        PROJECT_VERSION = "1.0.${BUILD_NUMBER}"  
+        // Read current version from POM and increment
+        NEXT_VERSION = sh(script: 'mvn help:evaluate -Dexpression=revision -q -DforceStdout | awk -F\\. \'{print $1"."$2"."($3+1)}\'', returnStdout: true).trim()
     }
     stages {
         // Set version in POM
         stage('Set Version') {
             steps {
-                sh "mvn versions:set -DnewVersion=${PROJECT_VERSION}"
+                // Update POM with new version
+                sh "mvn versions:set-property -Dproperty=revision -DnewVersion=${NEXT_VERSION}"
+                
+                // Commit version change (optional)
+                sh """
+                    git config user.email 'basma.oueslati@gmail.com'
+                    git config user.name 'Jenkins'
+                    git add pom.xml
+                    git commit -m 'Bump version to ${NEXT_VERSION}' || echo 'No changes to commit'
+                """
             }
         }
      
         //Continuous Integration
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests=true'
+                sh 'mvn clean package -DskipTests=true -Drevision=${NEXT_VERSION}'
             }
         }
-      stage('Test') {
+        stage('Test') {
             steps {
                 sh 'mvn test'
             }
@@ -28,7 +38,7 @@ pipeline {
                 nexusArtifactUploader artifacts: [
                     [
                         artifactId: 'numeric', classifier: '', 
-                        file: "target/numeric-${PROJECT_VERSION}.jar",  
+                        file: "target/numeric-${NEXT_VERSION}.jar",  
                         type: 'jar'
                     ]
                 ], 
@@ -38,15 +48,15 @@ pipeline {
                 nexusVersion: 'nexus3', 
                 protocol: 'http', 
                 repository: 'compare', 
-                version: "${PROJECT_VERSION}" 
+                version: "${NEXT_VERSION}" 
             }
         }
 
         stage('Docker Build&Push') {
             steps {
                 withDockerRegistry(credentialsId: 'docker', url: "") {
-                    sh "docker build -t basmaoueslati/compare-appf25:${PROJECT_VERSION} ."
-                    sh "docker push basmaoueslati/compare-appf25:${PROJECT_VERSION}"
+                    sh "docker build -t basmaoueslati/compare-appf25:${NEXT_VERSION} ."
+                    sh "docker push basmaoueslati/compare-appf25:${NEXT_VERSION}"
                 }
             }
         }
@@ -102,7 +112,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 withDockerRegistry(credentialsId: 'docker', url: "") {
-                    sh 'docker -H ssh://ubuntu@13.38.26.14 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${PROJECT_VERSION}'
+                    sh 'docker -H ssh://ubuntu@13.38.26.14 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${NEXT_VERSION}'
                 }
             }  
         }
