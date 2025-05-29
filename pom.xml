@@ -11,9 +11,15 @@
 
 	<groupId>com.devops</groupId>
 	<artifactId>numeric</artifactId>
-	<version>1.0.${BUILD_NUMBER}</version>
+	<version>${revision}</version>
 	<name>numeric</name>
 	<description>Demo for DevOps</description>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>1.8</java.version>
+		<revision>1.0.0</revision> <!-- Default starting version -->
+	</properties>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
