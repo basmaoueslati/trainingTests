@@ -38,7 +38,7 @@ pipeline {
                 nexusVersion: 'nexus3', 
                 protocol: 'http', 
                 repository: 'compare', 
-                version: "${PROJECT_VERSION}", 
+                version: "${PROJECT_VERSION}" 
             }
         }
 
