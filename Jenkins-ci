@@ -1,10 +1,13 @@
 pipeline {
     agent any
+    environment {
+        VERSION = "1.0.${BUILD_NUMBER}"  
+    }
     stages {
         //Continuous Integration
         stage('Build') {
             steps {
-                sh 'mvn clean -Drevision=1.0.0 package -DskipTests=true'
+                sh 'mvn clean -Drevision=${VERSION}" package -DskipTests=true'
             }
         }
         stage('Test') {
@@ -13,12 +16,12 @@ pipeline {
             }
         }
                 //Continuous Delivery
-        stage('Artificat to nexus'){
+        stage('Upload to nexus'){
             steps {
                 nexusArtifactUploader artifacts: [
                     [
                         artifactId: 'numeric', classifier: '', 
-                        file: 'target/numeric-${revision}.jar', 
+                        file: 'target/numeric-${VERSION}.jar', 
                         type: 'jar'
                     ]
                 ], 
@@ -28,7 +31,7 @@ pipeline {
                 nexusVersion: 'nexus3', 
                 protocol: 'http', 
                 repository: 'compare', 
-                version: '${revision}'
+                version: '${VERSION}'
             }
         }
 
