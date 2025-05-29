@@ -56,7 +56,7 @@ pipeline {
                 sh 'docker image prune -f'
 
                 sh '''
-                docker images --filter=reference='basmaoueslati/compare-appf25:${PROJECT_VERSION}' --format '{{.ID}} {{.Repository}}:{{.Tag}}' \
+                docker images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}} {{.Repository}}:{{.Tag}}' \
                   | awk '{print $1}' \
                   | xargs -r docker rmi -f
                 '''
@@ -66,7 +66,7 @@ pipeline {
             steps {
                 echo '___Cleaning up old Docker images on remote server___'
                 sh '''
-                IMAGE_IDS=$(docker -H ssh://ubuntu@13.38.26.14 images --filter=reference='basmaoueslati/compare-appf25:${PROJECT_VERSION}' --format '{{.ID}}')
+                IMAGE_IDS=$(docker -H ssh://ubuntu@13.38.26.14 images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}}')
         
                 for IMAGE_ID in $IMAGE_IDS; do
                     echo "Processing image ID: $IMAGE_ID"
@@ -102,7 +102,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 withDockerRegistry(credentialsId: 'docker', url: "") {
-                    sh 'docker -H ssh://ubuntu@13.38.26.14 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:v3'
+                    sh 'docker -H ssh://ubuntu@13.38.26.14 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${PROJECT_VERSION}'
                 }
             }  
         }
