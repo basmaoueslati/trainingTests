@@ -13,19 +13,86 @@ pipeline {
             }
         }
                 //Continuous Delivery
+        stage('Artificat to nexus'){
+            steps {
+                nexusArtifactUploader artifacts: [
+                    [
+                        artifactId: 'numeric', classifier: '', 
+                        file: 'target/numeric-0.0.1.jar', 
+                        type: 'jar'
+                    ]
+                ], 
+                credentialsId: 'nexus', 
+                groupId: 'com.devops', 
+                nexusUrl: '13.38.26.14:8081', 
+                nexusVersion: 'nexus3', 
+                protocol: 'http', 
+                repository: 'compare', 
+                version: '0.0.1'
+            }
+        }
+
         stage('Docker Build&Push') {
             steps {
                 withDockerRegistry(credentialsId: 'docker', url: "") {
-                    sh 'docker build -t issaouib/compare-appf25 .'
-                    sh 'docker push issaouib/compare-appf25'
+                    sh 'docker build -t basmaoueslati/compare-appf25:v3 .'
+                    sh 'docker push basmaoueslati/compare-appf25:v3'
                 }
+            }
+        }
+        stage('Clean Old Docker Images on Local') {
+            steps {
+                echo '___Cleaning up unused Docker images___'
+                sh 'docker image prune -f'
+
+                sh '''
+                docker images --filter=reference='basmaoueslati/compare-appf25:v1' --format '{{.ID}} {{.Repository}}:{{.Tag}}' \
+                  | awk '{print $1}' \
+                  | xargs -r docker rmi -f
+                '''
+            }
+        }
+        stage('Clean Old Docker Images on Remote') {
+            steps {
+                echo '___Cleaning up old Docker images on remote server___'
+                sh '''
+                IMAGE_IDS=$(docker -H ssh://ubuntu@13.38.26.14 images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}}')
+        
+                for IMAGE_ID in $IMAGE_IDS; do
+                    echo "Processing image ID: $IMAGE_ID"
+        
+                    # Get containers based on the image
+                    CONTAINERS=$(docker -H ssh://ubuntu@13.38.26.14 ps -a -q --filter ancestor=$IMAGE_ID)
+        
+                    if [ -n "$CONTAINERS" ]; then
+                        echo "Stopping and removing containers using image $IMAGE_ID"
+                        docker -H ssh://ubuntu@13.38.26.14 rm -f $CONTAINERS
+                    fi
+        
+                    # Attempt to remove the image
+                    echo "Removing image $IMAGE_ID"
+                    docker -H ssh://ubuntu@13.38.26.14 rmi -f $IMAGE_ID || echo "Could not remove image $IMAGE_ID"
+                done
+        
+                echo "Pruning dangling images"
+                docker -H ssh://ubuntu@13.38.26.14 image prune -f
+                '''
+            }
+        }
+        stage('Delete Old Container') {
+            steps {
+                echo 'Removing old container "myapp" on remote server if it exists...'
+                sh '''
+                docker -H ssh://ubuntu@13.38.26.14 ps -a -q -f name=myapp | grep . && \
+                docker -H ssh://ubuntu@13.38.26.14 rm -f myapp || echo "Container does not exist."
+                '''
             }
         }
         //Continuous Deployment
         stage('Deploy') {
             steps {
                 withDockerRegistry(credentialsId: 'docker', url: "") {
-                    sh 'docker -H ssh://ubuntu@172.31.1.77 run -d --name myapp -p 8082:8080 issaouib/compare-appf25'
+                    sh 'docker -H ssh://ubuntu@13.38.26.14 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:v3'
                 }
             }  
         }
