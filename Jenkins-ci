@@ -1,8 +1,15 @@
 pipeline {
     agent any
-    //environment {
-    //    VERSION = "1.0.${BUILD_NUMBER}"  
-    //}
+    environment {
+        PROJECT_VERSION = "1.0.${BUILD_NUMBER}"  
+    }
+    stages {
+        // Set version in POM
+        stage('Set Version') {
+            steps {
+                sh "mvn versions:set -DnewVersion=${PROJECT_VERSION}"
+            }
+        }
     stages {
         //Continuous Integration
         stage('Build') {
@@ -21,7 +28,7 @@ pipeline {
                 nexusArtifactUploader artifacts: [
                     [
                         artifactId: 'numeric', classifier: '', 
-                        file: 'target/numeric-1.0.0.jar', 
+                        file: "target/numeric-${PROJECT_VERSION}.jar",  
                         type: 'jar'
                     ]
                 ], 
@@ -31,15 +38,15 @@ pipeline {
                 nexusVersion: 'nexus3', 
                 protocol: 'http', 
                 repository: 'compare', 
-                version: '1.0.0'
+                version: "${PROJECT_VERSION}", 
             }
         }
 
         stage('Docker Build&Push') {
             steps {
                 withDockerRegistry(credentialsId: 'docker', url: "") {
-                    sh 'docker build -t basmaoueslati/compare-appf25:v3 .'
-                    sh 'docker push basmaoueslati/compare-appf25:v3'
+                    sh "docker build -t basmaoueslati/compare-appf25:${PROJECT_VERSION} ."
+                    sh "docker push basmaoueslati/compare-appf25:${PROJECT_VERSION}"
                 }
             }
         }
@@ -49,7 +56,7 @@ pipeline {
                 sh 'docker image prune -f'
 
                 sh '''
-                docker images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}} {{.Repository}}:{{.Tag}}' \
+                docker images --filter=reference='basmaoueslati/compare-appf25:${PROJECT_VERSION}' --format '{{.ID}} {{.Repository}}:{{.Tag}}' \
                   | awk '{print $1}' \
                   | xargs -r docker rmi -f
                 '''
@@ -59,7 +66,7 @@ pipeline {
             steps {
                 echo '___Cleaning up old Docker images on remote server___'
                 sh '''
-                IMAGE_IDS=$(docker -H ssh://ubuntu@13.38.26.14 images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}}')
+                IMAGE_IDS=$(docker -H ssh://ubuntu@13.38.26.14 images --filter=reference='basmaoueslati/compare-appf25:${PROJECT_VERSION}' --format '{{.ID}}')
         
                 for IMAGE_ID in $IMAGE_IDS; do
                     echo "Processing image ID: $IMAGE_ID"
