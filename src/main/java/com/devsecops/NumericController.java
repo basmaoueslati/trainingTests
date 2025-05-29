@@ -27,7 +27,7 @@ public class NumericController {
 
 		@GetMapping("/")
 		public String welcome() {
-			return "Hello Devops From Container";
+			return "Hello Devops From Container with Nexus";
 		}
 
 		@GetMapping("/compare/{value}")
