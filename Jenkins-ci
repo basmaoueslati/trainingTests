@@ -70,7 +70,7 @@ pipeline {
                     sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=compare' 
                     }
                 timeout(time: 5, unit: 'MINUTES') {
-                    script{
+                    script {
                         waitForQualityGate abortPipeline: true
                     }
                 }
