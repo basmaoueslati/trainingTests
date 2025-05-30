@@ -16,7 +16,7 @@ pipeline {
                 // Configure Git user
                 sh """
                 git config user.email 'basma.oueslati@gmail.com'
-                git config user.name 'Jenkins'
+                git config user.name 'oueslatibasma'
                 """
             }
         }
