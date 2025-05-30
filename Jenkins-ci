@@ -6,6 +6,20 @@ pipeline {
         BRANCH_NAME = "main"  
     }
     stages {
+        stage('Checkout & Setup') {
+            steps {
+                checkout scm
+                
+                // Ensure we have latest changes
+                sh "git pull origin ${BRANCH_NAME} || true"
+                
+                // Configure Git user
+                sh """
+                git config user.email 'basma.oueslati@gmail.com'
+                git config user.name 'Jenkins'
+                """
+            }
+        }
         stage('Calculate Version') {
             steps {
                 script {
