@@ -21,6 +21,8 @@ pipeline {
                     NEXT_VERSION = "${parts[0]}.${parts[1]}.${newPatch}"
                     
                     echo "Updating version: ${CURRENT_VERSION} → ${NEXT_VERSION}"
+                    env.NEXT_VERSION = NEXT_VERSION  // Ensure it's in environment
+                    echo "Calculated version: ${env.NEXT_VERSION}"
                 }
             }
         }
@@ -140,7 +142,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 withDockerRegistry(credentialsId: 'docker', url: "") {
-                    sh 'docker -H ssh://ubuntu@13.38.26.14 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${NEXT_VERSION}'
+                    sh 'docker -H ssh://ubuntu@13.38.26.14 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${env.NEXT_VERSION}'
                 }
             }  
         }
