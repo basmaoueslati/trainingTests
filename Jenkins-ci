@@ -84,7 +84,7 @@ pipeline {
                 ], 
                 credentialsId: 'nexus', 
                 groupId: 'com.devops', 
-                nexusUrl: '35.180.232.17:8081', 
+                nexusUrl: '15.188.146.236:8081', 
                 nexusVersion: 'nexus3', 
                 protocol: 'http', 
                 repository: 'compare', 
@@ -116,26 +116,26 @@ pipeline {
             steps {
                 echo '___Cleaning up old Docker images on remote server___'
                 sh '''
-                IMAGE_IDS=$(docker -H ssh://ubuntu@35.180.232.17 images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}}')
+                IMAGE_IDS=$(docker -H ssh://ubuntu@15.188.146.236 images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}}')
         
                 for IMAGE_ID in $IMAGE_IDS; do
                     echo "Processing image ID: $IMAGE_ID"
         
                     # Get containers based on the image
-                    CONTAINERS=$(docker -H ssh://ubuntu@35.180.232.17 ps -a -q --filter ancestor=$IMAGE_ID)
+                    CONTAINERS=$(docker -H ssh://ubuntu@15.188.146.236 ps -a -q --filter ancestor=$IMAGE_ID)
         
                     if [ -n "$CONTAINERS" ]; then
                         echo "Stopping and removing containers using image $IMAGE_ID"
-                        docker -H ssh://ubuntu@35.180.232.17 rm -f $CONTAINERS
+                        docker -H ssh://ubuntu@15.188.146.236 rm -f $CONTAINERS
                     fi
         
                     # Attempt to remove the image
                     echo "Removing image $IMAGE_ID"
-                    docker -H ssh://ubuntu@35.180.232.17 rmi -f $IMAGE_ID || echo "Could not remove image $IMAGE_ID"
+                    docker -H ssh://ubuntu@15.188.146.236 rmi -f $IMAGE_ID || echo "Could not remove image $IMAGE_ID"
                 done
         
                 echo "Pruning dangling images"
-                docker -H ssh://ubuntu@35.180.232.17 image prune -f
+                docker -H ssh://ubuntu@15.188.146.236 image prune -f
                 '''
             }
         }
@@ -143,8 +143,8 @@ pipeline {
             steps {
                 echo 'Removing old container "myapp" on remote server if it exists...'
                 sh '''
-                docker -H ssh://ubuntu@35.180.232.17 ps -a -q -f name=myapp | grep . && \
-                docker -H ssh://ubuntu@35.180.232.17 rm -f myapp || echo "Container does not exist."
+                docker -H ssh://ubuntu@15.188.146.236 ps -a -q -f name=myapp | grep . && \
+                docker -H ssh://ubuntu@15.188.146.236 rm -f myapp || echo "Container does not exist."
                 '''
             }
         }
@@ -154,7 +154,7 @@ pipeline {
         script {
             def version = NEXT_VERSION      
             sh """
-            docker -H ssh://ubuntu@35.180.232.17 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${version}
+            docker -H ssh://ubuntu@15.188.146.236 run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${version}
             """
         }
             }  
