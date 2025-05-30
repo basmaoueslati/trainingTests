@@ -1,8 +1,9 @@
 pipeline {
     agent any
     environment {
-        // Read current version from POM and increment
-        NEXT_VERSION = sh(script: 'mvn help:evaluate -Dexpression=revision -q -DforceStdout | awk -F\\. \'{print $1"."$2"."($3+1)}\'', returnStdout: true).trim()
+        GIT_CREDS = credentials('git-creds') 
+        REPO_URL = "https://github.com/basmaoueslati/trainingTests.git" 
+        BRANCH_NAME = "main"  
     }
     stages {
         stage('Calculate Version') {
@@ -14,9 +15,9 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     
-                    // Split version and increment patch number
-                    parts = CURRENT_VERSION.tokenize('.')
-                    newPatch = (parts[2] as Integer) + 1
+                    // Parse and increment version
+                    def parts = CURRENT_VERSION.split('\\.')
+                    def newPatch = (parts[2] as Integer) + 1
                     NEXT_VERSION = "${parts[0]}.${parts[1]}.${newPatch}"
                     
                     echo "Updating version: ${CURRENT_VERSION} → ${NEXT_VERSION}"
@@ -26,15 +27,17 @@ pipeline {
         // Set version in POM
         stage('Set Version') {
             steps {
+                // Update POM version
                 sh "mvn versions:set-property -Dproperty=revision -DnewVersion=${NEXT_VERSION}"
-                sh "mvn versions:commit"  // Clean up backup files
+                sh "mvn versions:commit"
                 
-                // Optional: Commit version change
+                // Commit and push changes
                 sh """
-                    git config user.email 'basma.oueslati@gmail.com'
-                    git config user.name 'Jenkins'
-                    git add pom.xml
-                    git commit -m 'Bump version to ${NEXT_VERSION}' || echo 'No changes to commit'
+                git add pom.xml
+                git commit -m 'Bump version to ${NEXT_VERSION}'
+                
+                # Push to repository
+                git push https://${GIT_CREDS_USR}:${GIT_CREDS_PSW}@${REPO_URL.replaceFirst('https://', '')} HEAD:${BRANCH_NAME}
                 """
             }
         }
