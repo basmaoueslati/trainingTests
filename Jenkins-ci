@@ -22,7 +22,7 @@ pipeline {
                     echo "Updating version: ${CURRENT_VERSION} → ${NEXT_VERSION}"
                 }
             }
-        }
+        } 
         // Set version in POM
         stage('Set Version') {
             steps {
