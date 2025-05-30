@@ -108,7 +108,6 @@ pipeline {
             steps {
                 echo '___Cleaning up old Docker images on remote server___'
                 sh '''
-                echo -e "Host 35.180.232.17\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile /dev/null" > ~/.ssh/config
                 IMAGE_IDS=$(docker -H ssh://ubuntu@35.180.232.17 images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}}')
         
                 for IMAGE_ID in $IMAGE_IDS; do
