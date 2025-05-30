@@ -64,6 +64,14 @@ pipeline {
                 sh 'mvn test'
             }
         }
+        stage('Sonar Scanner') {
+            steps {
+                sh 'mvn clean verify sonar:sonar \
+                      -Dsonar.projectKey=compare \
+                      -Dsonar.host.url=http://15.188.146.236:9000 \
+                      -Dsonar.login=sqp_88dc3699a1ebe441a44bbfcd6d680ae88baad62a'
+            }
+        }
                 //Continuous Delivery
         stage('Upload to nexus'){
             steps {
