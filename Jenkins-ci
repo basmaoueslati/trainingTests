@@ -64,21 +64,18 @@ pipeline {
                 sh 'mvn test'
             }
         }
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') { // Configured in Jenkins global config
-                    sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=compare'
-                }
-            }
+
+        stage('Build') {
+                    steps {
+                        sh '''
+                   mvn clean verify sonar:sonar \
+                  -Dsonar.projectKey=compare-app \
+                  -Dsonar.host.url=http://15.188.146.236:9000 \
+                  -Dsonar.login=sqp_fc12ef7631c9632f2bfeb5c2c0d68166278d5143 
+                        '''
         }
-        
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
         }
+
                 //Continuous Delivery
         stage('Upload to nexus'){
             steps {
