@@ -1,25 +1,11 @@
 pipeline {
     agent any
     environment {
-        GIT_CREDS = credentials('git-creds') 
-        REPO_URL = "https://github.com/basmaoueslati/trainingTests.git" 
-        BRANCH_NAME = "main"  
+        REPO_URL = "git@github.com:basmaoueslati/trainingTests.git"  
+        BRANCH_NAME = "main"  // Update to your branch
     }
     stages {
-        stage('Checkout & Setup') {
-            steps {
-                checkout scm
-                
-                // Ensure we have latest changes
-                sh "git pull origin ${BRANCH_NAME} || true"
-                
-                // Configure Git user
-                sh """
-                git config user.email 'basma.oueslati@gmail.com'
-                git config user.name 'oueslatibasma'
-                """
-            }
-        }
+
         stage('Calculate Version') {
             steps {
                 script {
@@ -37,7 +23,7 @@ pipeline {
                     echo "Updating version: ${CURRENT_VERSION} → ${NEXT_VERSION}"
                 }
             }
-        } 
+        }
         // Set version in POM
         stage('Set Version') {
             steps {
@@ -45,14 +31,21 @@ pipeline {
                 sh "mvn versions:set-property -Dproperty=revision -DnewVersion=${NEXT_VERSION}"
                 sh "mvn versions:commit"
                 
-                // Commit and push changes
+                // Commit changes
                 sh """
                 git add pom.xml
                 git commit -m 'Bump version to ${NEXT_VERSION}'
-                
-                # Push to repository
-                git push https://${GIT_CREDS_USR}:${GIT_CREDS_PSW}@${REPO_URL.replaceFirst('https://', '')} HEAD:${BRANCH_NAME}
                 """
+            }
+        }
+        stage('Push Changes') {
+            steps {
+                sshagent(['github-ssh-key']) {  
+                    sh """
+                    git pull origin ${BRANCH_NAME} || true
+                    git push origin HEAD:${BRANCH_NAME}
+                    """
+                }
             }
         }
      
