@@ -118,7 +118,7 @@ pipeline {
         
                     if [ -n "$CONTAINERS" ]; then
                         echo "Stopping and removing containers using image $IMAGE_ID"
-                        docker -H ssh://ubuntu@$35.180.232.17 rm -f $CONTAINERS
+                        docker -H ssh://ubuntu@35.180.232.17 rm -f $CONTAINERS
                     fi
         
                     # Attempt to remove the image
