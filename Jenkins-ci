@@ -5,13 +5,31 @@ pipeline {
         NEXT_VERSION = sh(script: 'mvn help:evaluate -Dexpression=revision -q -DforceStdout | awk -F\\. \'{print $1"."$2"."($3+1)}\'', returnStdout: true).trim()
     }
     stages {
+        stage('Calculate Version') {
+            steps {
+                script {
+                    // Read current version from POM
+                    CURRENT_VERSION = sh(
+                        script: 'mvn help:evaluate -Dexpression=revision -q -DforceStdout',
+                        returnStdout: true
+                    ).trim()
+                    
+                    // Split version and increment patch number
+                    parts = CURRENT_VERSION.tokenize('.')
+                    newPatch = (parts[2] as Integer) + 1
+                    NEXT_VERSION = "${parts[0]}.${parts[1]}.${newPatch}"
+                    
+                    echo "Updating version: ${CURRENT_VERSION} → ${NEXT_VERSION}"
+                }
+            }
+        }
         // Set version in POM
         stage('Set Version') {
             steps {
-                // Update POM with new version
                 sh "mvn versions:set-property -Dproperty=revision -DnewVersion=${NEXT_VERSION}"
+                sh "mvn versions:commit"  // Clean up backup files
                 
-                // Commit version change (optional)
+                // Optional: Commit version change
                 sh """
                     git config user.email 'basma.oueslati@gmail.com'
                     git config user.name 'Jenkins'
@@ -24,7 +42,7 @@ pipeline {
         //Continuous Integration
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests=true -Drevision=${NEXT_VERSION}'
+                sh 'mvn clean package -DskipTests=true'
             }
         }
         stage('Test') {
