@@ -69,6 +69,11 @@ pipeline {
                 withSonarQubeEnv("SonarQube") {
                     sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=compare' 
                     }
+                timeout(time: 5, unit: 'MINUTES') {
+                    script{
+                        waitForQualityGate abortPipeline: true
+                    }
+                }
 
             }
         }
