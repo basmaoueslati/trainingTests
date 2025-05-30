@@ -28,14 +28,17 @@ pipeline {
         // Set version in POM
         stage('Set Version') {
             steps {
-                // Update POM version
                 sh "mvn versions:set-property -Dproperty=revision -DnewVersion=${NEXT_VERSION}"
                 sh "mvn versions:commit"
                 
-                // Commit changes
                 sh """
+                # Configure Git user
+                git config --local user.email "basma.oueslati@gmail.com"
+                git config --local user.name "Jenkins"
+                
+                # Add and commit changes
                 git add pom.xml
-                git commit -m 'Bump version to ${NEXT_VERSION}'
+                git commit -m "Bump version to ${NEXT_VERSION}"
                 """
             }
         }
