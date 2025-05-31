@@ -124,28 +124,28 @@ pipeline {
             steps {
                 echo '___Cleaning up old Docker images on remote server___'
                 sh '''
-                IMAGE_IDS=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@15.188.146.236 "docker images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}}'")
+                IMAGE_IDS=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@13.36.176.204 "docker images --filter=reference='basmaoueslati/compare-appf25*' --format '{{.ID}}'")
 
         
                 for IMAGE_ID in $IMAGE_IDS; do
                     echo "Processing image ID: $IMAGE_ID"
         
                     # Get containers based on the image
-                CONTAINERS=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@15.188.146.236 "docker ps -a -q --filter ancestor=$IMAGE_ID")
+                CONTAINERS=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@13.36.176.204 "docker ps -a -q --filter ancestor=$IMAGE_ID")
         
                     if [ -n "$CONTAINERS" ]; then
                         echo "Stopping and removing containers using image $IMAGE_ID"
-                        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@15.188.146.236 "docker rm -f $CONTAINERS"
+                        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@13.36.176.204 "docker rm -f $CONTAINERS"
 
                     fi
         
                     # Attempt to remove the image
                     echo "Removing image $IMAGE_ID"
-                    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@15.188.146.236 "docker rmi -f $IMAGE_ID" || echo "Could not remove image $IMAGE_ID"
+                    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@13.36.176.204 "docker rmi -f $IMAGE_ID" || echo "Could not remove image $IMAGE_ID"
                 done
         
                 echo "Pruning dangling images"
-                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@15.188.146.236 "docker image prune -f"
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@13.36.176.204 "docker image prune -f"
 
                 '''
             }
@@ -154,8 +154,8 @@ pipeline {
             steps {
                 echo 'Removing old container "myapp" on remote server if it exists...'
                 sh '''
-                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@15.188.146.236 "docker ps -a -q -f name=myapp" | grep . && \
-                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@15.188.146.236 "docker rm -f myapp"  || echo "Container does not exist."
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@13.36.176.204 "docker ps -a -q -f name=myapp" | grep . && \
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@13.36.176.204 "docker rm -f myapp"  || echo "Container does not exist."
                 '''
             }
         }
@@ -165,7 +165,7 @@ pipeline {
         script {
             def version = NEXT_VERSION      
             sh """
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@15.188.146.236 "docker run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${version}"
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@13.36.176.204 "docker run -d --name myapp -p 8086:8080 basmaoueslati/compare-appf25:${version}"
             """
         }
             }  
